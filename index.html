@@ -341,10 +341,22 @@
 </footer>
 
 <script>
-  const io = new IntersectionObserver((entries)=>{
-    for (const e of entries) if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
-  },{threshold:.12});
-  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+  // Rect-based reveal: deterministic in every renderer (IntersectionObserver
+  // stalls in some embedded webviews when the compositor is idle).
+  const els = Array.from(document.querySelectorAll('.reveal'));
+  function reveal(){
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    for (const el of els){
+      if (el.classList.contains('in')) continue;
+      const r = el.getBoundingClientRect();
+      if (r.top < vh * 0.94 && r.bottom > 0) el.classList.add('in');
+    }
+  }
+  document.addEventListener('scroll', reveal, {passive:true});
+  window.addEventListener('resize', reveal, {passive:true});
+  window.addEventListener('load', reveal);
+  setTimeout(reveal, 400);
+  reveal();
 </script>
 </body>
 </html>
